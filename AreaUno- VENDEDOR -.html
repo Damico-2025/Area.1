@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AREA 1 - Admin</title>
+  <style>
+    :root { --bg:#101010; --card:#161616; --fg:#eee; --muted:#aaa; --border:#333; --accent:#f00; --accent-dark:#c00; }
+    *{box-sizing:border-box}
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); color:var(--fg); }
+    header { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; background:#000; border-bottom:2px solid #444; }
+    header h1 { margin:0; letter-spacing:2px; }
+    .badge { border:1px solid var(--border); padding:.15rem .4rem; border-radius:4px; font-size:.8rem; color:var(--muted); }
+    main { display:grid; grid-template-columns: 1fr 1fr; gap:1rem; padding:1rem; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1rem; }
+    .card h2 { margin-top:0; color:var(--accent); }
+    label { display:block; margin:.5rem 0 .25rem; color:var(--muted); }
+    input, select, textarea { width:100%; padding:.5rem .75rem; border:1px solid var(--border); border-radius:6px; background:#0e0e0e; color:var(--fg); }
+    textarea { min-height:80px; }
+    .row { display:flex; gap:.5rem; }
+    .btn { border:none; cursor:pointer; border-radius:6px; padding:.5rem .75rem; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-dark); }
+    .btn-ghost { background:transparent; color:var(--fg); border:1px solid var(--border); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:.75rem; }
+    .prod { border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#121212; }
+    .prod img { width:100%; height:160px; object-fit:cover; background:#0e0e0e; }
+    .prod .info { padding:.5rem .75rem; font-size:.95rem; }
+    .prod .actions { display:flex; gap:.5rem; padding:.5rem .75rem .75rem; flex-wrap:wrap; }
+    @media (max-width: 900px){ main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AREA 1 - Admin</h1>
+    <div>
+      <span class="badge">Catálogo almacenado en tu navegador</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Nuevo producto / Editar</h2>
+      <div class="row">
+        <div style="flex:1">
+          <label>Nombre</label>
+          <input id="nombre" placeholder="Ej: Remera Negra">
+        </div>
+        <div style="width:220px">
+          <label>Categoría</label>
+          <select id="categoria">
+            <option value="promos">PROMOS %Off</option>
+            <option value="remeras">Remeras</option>
+            <option value="pantalones">Pantalones</option>
+            <option value="camperas">Camperas</option>
+            <option value="accesorios">Accesorios</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <label>Precio (ARS)</label>
+          <input id="precio" type="number" min="0" step="1" placeholder="Ej: 12000">
+        </div>
+        <div style="width:180px">
+          <label>Stock</label>
+          <input id="stock" type="number" min="0" step="1" placeholder="Ej: 10">
+        </div>
+       
+    
+        <div style="width:220px">
+          <label>Categoría</label>
+          <select id="categoria">
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="S+ / 38	">S+ / 38	</option>
+            <option value="M / 40		">M / 40		</option>
+            <option value="M+ / 42		">M+ / 42		</option>
+            <option value="L / 44	">L / 44	</option>
+            <option value="L+ / 46		">L+ / 46	</option>
+            <option value="XL / 48		">XL / 48		</option>
+          </select>
+        </div>
+      </div>
+      <label>Descripción</label>
+      <textarea id="descripcion" placeholder="Detalles, materiales, calce..."></textarea>
+      <label>Imagen (ruta local)</label>
+      <input id="imagen" placeholder="Ej: img/remeras/remera-negra.jpg">
+      <div style="margin-top:.75rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="addBtn">Agregar al catálogo</button>
+        <button class="btn btn-ghost" id="previewBtn">Previsualizar imagen</button>
+        <button class="btn btn-ghost" id="clearBtn">Limpiar</button>
+      </div>
+      <div id="preview" style="margin-top:.75rem;"></div>
+    </section>
+
+    <section class="card">
+      <h2>Catálogo</h2>
+      <div class="row" style="margin-bottom:.75rem; flex-wrap:wrap;">
+        <select id="filterCat" style="width:220px">
+          <option value="todos">Todos</option>
+          <option value="promos">PROMOS %Off</option>
+          <option value="remeras">Remeras</option>
+          <option value="pantalones">Pantalones</option>
+          <option value="camperas">Camperas</option>
+          <option value="accesorios">Accesorios</option>
+        </select>
+        <input id="search" placeholder="Buscar por nombre o descripción..." style="flex:1; min-width:240px;">
+        <button class="btn btn-ghost" id="resetDemo">Cargar demo</button>
+        <button class="btn btn-ghost" id="exportBtn">Exportar JSON</button>
+        <button class="btn btn-ghost" id="importBtn">Importar JSON</button>
+        <input type="file" id="fileInput" accept="application/json" style="display:none;">
+      </div>
+      <div class="grid" id="listado"></div>
+    </section>
+  </main>
+
+  <script>
+    const LS_KEY = 'AREA1_CATALOGO';
+    const LS = {
+      load() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){ return []; } },
+      save(cat) { localStorage.setItem(LS_KEY, JSON.stringify(cat)); },
+      demo() {
+        return [
+          {id: crypto.randomUUID(), nombre: 'Promo Remera Negra', categoria: 'promos', precio: 10000, stock: 6, descripcion: 'Algodón 100% corte recto', imagen: 'img/remeras/remera-negra.jpg'},
+          {id: crypto.randomUUID(), nombre: 'Pantalón Cargo', categoria: 'pantalones', precio: 18000, stock: 8, descripcion: 'Tejido resistente con bolsillos', imagen: 'img/pantalones/cargo-verde.jpg'},
+          {id: crypto.randomUUID(), nombre: 'Campera Urbana', categoria: 'camperas', precio: 25000, stock: 5, descripcion: 'Corte oversize, liviana', imagen: 'img/camperas/campera-negra.jpg'},
+          {id: crypto.randomUUID(), nombre: 'Gorra AREA 1', categoria: 'accesorios', precio: 8000, stock: 12, descripcion: 'Bordado frontal', imagen: 'img/accesorios/gorra-negra.jpg'}
+        ];
+      }
+    };
+
+    let catalogo = LS.load();
+
+    // Form refs
+    const nombreEl = document.getElementById('nombre');
+    const categoriaEl = document.getElementById('categoria');
+    const precioEl = document.getElementById('precio');
+    const stockEl = document.getElementById('stock');
+    const descripcionEl = document.getElementById('descripcion');
+    const imagenEl = document.getElementById('imagen');
+    const addBtn = document.getElementById('addBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewEl = document.getElementById('preview');
+
+    // Listado refs
+    const listadoEl = document.getElementById('listado');
+    const filterCatEl = document.getElementById('filterCat');
+    const searchEl = document.getElementById('search');
+    const resetDemoBtn = document.getElementById('resetDemo');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    function limpiarForm() {
+      nombreEl.value = '';
+      categoriaEl.value = 'promos';
+      precioEl.value = '';
+      stockEl.value = '';
+      descripcionEl.value = '';
+      imagenEl.value = '';
+      previewEl.innerHTML = '';
+      addBtn.textContent = 'Agregar al catálogo';
+      delete addBtn.dataset.editing;
+    }
+
+    // Render listado
+    function renderListado() {
+      const cat = filterCatEl.value;
+      const q = (searchEl.value || '').trim().toLowerCase();
+      const filtrados = catalogo.filter(p => {
+        const catOk = (cat === 'todos') ? true : p.categoria === cat;
+        const qOk = q ? (p.nombre.toLowerCase().includes(q) || (p.descripcion || '').toLowerCase().includes(q)) : true;
+        return catOk && qOk;
+      });
+
+      listadoEl.innerHTML = '';
+      if (filtrados.length === 0) {
+        listadoEl.innerHTML = `<div class="badge">No hay productos</div>`;
+        return;
+      }
+
+      filtrados.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'prod';
+        card.innerHTML = `
+          <img src="${p.imagen || 'https://via.placeholder.com/600x400?text=AREA+1'}" alt="${p.nombre}">
+          <div class="info">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${p.nombre}</strong>
+              <span class="badge">${p.categoria}</span>
+            </div>
+            <div>ARS ${p.precio.toLocaleString('es-AR')}</div>
+            <div>Stock: ${p.stock}</div>
+            <div style="color:var(--muted)">${p.descripcion || ''}</div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" data-edit="${p.id}">Editar</button>
+            <button class="btn btn-ghost" data-del="${p.id}">Eliminar</button>
+            <button class="btn btn-ghost" data-addstock="${p.id}">+ Stock</button>
+            <button class="btn btn-ghost" data-substock="${p.id}">- Stock</button>
+          </div>
+        `;
+        listadoEl.appendChild(card);
+      });
+
+      // Eventos
+      document.querySelectorAll('button[data-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-edit');
+          const p = catalogo.find(x => x.id === id);
+          if (!p) return;
+          nombreEl.value = p.nombre;
+          categoriaEl.value = p.categoria;
+          precioEl.value = p.precio;
+          stockEl.value = p.stock;
+          descripcionEl.value = p.descripcion || '';
+          imagenEl.value = p.imagen || '';
+          addBtn.textContent = 'Guardar cambios';
+          addBtn.dataset.editing = id;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      document.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-del');
+          if (!confirm('¿Eliminar este producto?')) return;
+          catalogo = catalogo.filter(p => p.id !== id);
+          LS.save(catalogo);
+          renderListado();
+        });
+      });
+
+      document.querySelectorAll('button[data-addstock]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-addstock');
+          catalogo = catalogo.map(p => p.id === id ? { ...p, stock: p.stock + 1 } : p);
+          LS.save(catalogo);
+          renderListado();
+        });
+      });
+
+      document.querySelectorAll('button[data-substock]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-substock');
+          catalogo = catalogo.map(p => p.id === id ? { ...p, stock: Math.max(0, p.stock - 1) } : p);
+          LS.save(catalogo);
+          renderListado();
+        });
+      });
+    }
+
+    // Guardar / Agregar
+    addBtn.addEventListener('click', () => {
+      const nombre = nombreEl.value.trim();
+      const categoria = categoriaEl.value;
+      const precio = parseInt(precioEl.value, 10);
+      const stock = parseInt(stockEl.value, 10);
+      const descripcion = descripcionEl.value.trim();
+      const imagen = imagenEl.value.trim();
+
+      if (!nombre || !categoria || isNaN(precio) || isNaN(stock)) {
+        alert('Completa nombre, categoría, precio y stock.');
+        return;
+      }
+
+      if (addBtn.dataset.editing) {
+        const id = addBtn.dataset.editing;
+        catalogo = catalogo.map(p => p.id === id ? { ...p, nombre, categoria, precio, stock, descripcion, imagen } : p);
+        addBtn.textContent = 'Agregar al catálogo';
+        delete addBtn.dataset.editing;
+      } else {
+        const id = crypto.randomUUID();
+        catalogo.push({ id, nombre, categoria, precio, stock, descripcion, imagen });
+      }
+      LS.save(catalogo);
+      limpiarForm();
+      renderListado();
+      alert('Catálogo actualizado.');
+    });
+
+    // Limpieza rápida
+    clearBtn.addEventListener('click', limpiarForm);
+
+    // Previsualizar imagen
+    previewBtn.addEventListener('click', () => {
+      const src = imagenEl.value.trim();
+      if (!src) { previewEl.innerHTML = '<div class="badge">Ingresa una ruta de imagen</div>'; return; }
+      previewEl.innerHTML = `<img src="${src}" alt="preview" style="width:100%; max-height:280px; object-fit:cover; border:1px solid var(--border); border-radius:8px;">`;
+    });
+
+    // Filtro y búsqueda
+    filterCatEl.addEventListener('change', renderListado);
+    searchEl.addEventListener('input', renderListado);
+
+    // Exportar/Importar JSON
+    exportBtn.addEventListener('click', () => {
+      const dataStr = JSON.stringify(catalogo, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'area1_catalogo.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    importBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error('Formato inválido');
+        catalogo = data;
+        LS.save(catalogo);
+        renderListado();
+        alert('Catálogo importado.');
+      } catch (err) {
+        alert('No se pudo importar el archivo JSON.');
+      } finally {
+        fileInput.value = '';
+      }
+    });
+
+    // Cargar demo si está vacío
+    if (!catalogo || catalogo.length === 0) {
+      catalogo = LS.demo();
+      LS.save(catalogo);
+    }
+    resetDemoBtn.addEventListener('click', () => {
+      if (!confirm('Esto reemplazará tu catálogo actual por uno de demostración.')) return;
+      catalogo = LS.demo();
+      LS.save(catalogo);
+      renderListado();
+      alert('Demo cargada.');
+    });
+
+    // Init
+    renderListado();
+  </script>
+</body>
+</html>

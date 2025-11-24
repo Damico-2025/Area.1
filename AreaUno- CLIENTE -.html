@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AREA 1 - Tienda Urbana</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0d0d0d, #1a1a1a, #000);
+      --fg: #eee; --muted: #aaa; --card: #1a1a1a; --border: #333;
+      --accent: #f00; --accent-dark: #c00;
+    }
+    *{box-sizing:border-box}
+    body { margin:0; font-family:'Orbitron', sans-serif; background:var(--bg); color:var(--fg); }
+    header { background: transparent; padding: 2rem; text-align: center; }
+    header h1 { margin:0; font-size:2.6rem; letter-spacing:3px; color:#fff; }
+    nav {
+      display:flex; justify-content:center; gap:1rem; background:#222; padding:.75rem 1rem;
+      position: sticky; top:0; z-index: 5;
+    }
+    nav button {
+      background: transparent; border: 1px solid var(--border); color: var(--fg);
+      padding:.5rem .75rem; border-radius:6px; cursor:pointer; font-weight:bold;
+    }
+    nav button.active, nav button:hover { border-color: var(--accent); color: var(--accent); }
+    .catalogo {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:1rem; padding:1.5rem; max-width:1200px; margin:0 auto;
+    }
+    .producto { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
+    .producto img { width:100%; height:260px; object-fit:cover; background:#0e0e0e; }
+    .contenido { padding:.75rem 1rem; display:flex; flex-direction:column; gap:.25rem; }
+    .contenido h3 { margin:.25rem 0; font-size:1.1rem; }
+    .precio { color:var(--fg); font-weight:bold; }
+    .descripcion { color:var(--muted); font-size:.95rem; }
+    .stock { font-size:.9rem; color:var(--muted); }
+    .sin-stock { color:#ff7777; font-weight:bold; }
+    .acciones { display:flex; gap:.5rem; padding:.75rem 1rem 1rem; margin-top:auto; }
+    .btn { border:none; cursor:pointer; border-radius:6px; padding:.5rem .75rem; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:var(--accent-dark); }
+    .btn-ghost { background:transparent; color:var(--fg); border:1px solid var(--border); }
+    footer { background:#000; border-top:2px solid #444; color:#888; text-align:center; padding:1rem; margin-top:1rem; }
+    #carrito {
+      position: fixed; right: 0; top: 0; width: 360px; height: 100%;
+      background: #111; border-left: 2px solid #444; padding: 1rem;
+      display: none; z-index: 10; overflow-y:auto;
+    }
+    #carrito h2 { margin-top:0; color: var(--accent); }
+    #carrito ul { list-style:none; padding:0; margin:0; }
+    #carrito li {
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--border); padding:.5rem 0;
+    }
+    #carrito .total { margin-top:1rem; font-weight:bold; display:flex; justify-content:space-between; }
+    #toggleCarrito {
+      position: fixed; bottom: 20px; right: 20px; background: var(--accent);
+      color:#fff; border:none; padding:1rem; border-radius:50%; cursor:pointer; font-size:1.2rem; z-index: 9;
+    }
+    .formulario { margin-top:1rem; }
+    .formulario label { display:block; margin:.5rem 0 .25rem; }
+    .formulario input, .formulario textarea {
+      width:100%; padding:.5rem; border:1px solid var(--border); border-radius:6px; background:#0e0e0e; color:#fff;
+    }
+    .empty { text-align:center; color:var(--muted); padding:2rem; }
+    .badge { border:1px solid var(--border); padding:.15rem .4rem; border-radius:4px; font-size:.8rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AREA 1</h1>
+  </header>
+
+  <nav>
+    <button data-cat="promos" class="active">PROMOS %Off</button>
+    <button data-cat="remeras">Remeras</button>
+    <button data-cat="pantalones">Pantalones</button>
+    <button data-cat="camperas">Camperas</button>
+    <button data-cat="accesorios">Accesorios</button>
+  </nav>
+
+  <section class="catalogo" id="catalogo"></section>
+
+  <footer>
+    <p>© 2025 AREA 1 | Moda Urbana Minimalista</p>
+  </footer>
+
+  <div id="carrito">
+    <h2>Carrito</h2>
+    <ul id="listaCarrito"></ul>
+    <div class="total">
+      <span>Total</span><span id="totalMonto">ARS 0</span>
+    </div>
+    <div class="formulario">
+      <label>Nombre y Apellido</label><input id="nombre">
+      <label>DNI</label><input id="dni">
+      <label>Localidad</label><input id="localidad">
+      <label>Dirección</label><input id="direccion">
+      <label>Contacto</label><input id="contacto">
+      <label>ACLARACIONES</label><textarea id="aclaraciones" placeholder="// Aclaraciones"></textarea>
+    </div>
+    <div style="display:flex; gap:.5rem; margin-top:1rem;">
+      <button class="btn btn-ghost" id="vaciarBtn">Vaciar</button>
+      <button class="btn btn-primary" id="checkoutBtn">Iniciar compra (WhatsApp)</button>
+    </div>
+  </div>
+  <button id="toggleCarrito">🛒</button>
+
+  <script>
+    // WhatsApp destino
+    const whatsAppNumber = '5491138453507';
+
+    // LocalStorage helpers
+    const LS_KEY = 'AREA1_CATALOGO';
+    const LS = {
+      load() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){ return []; } },
+      save(cat) { localStorage.setItem(LS_KEY, JSON.stringify(cat)); },
+      ensureDemo() {
+        if (!localStorage.getItem(LS_KEY)) {
+          const demo = [
+            {id: crypto.randomUUID(), nombre: 'Promo Remera Negra', categoria: 'promos', precio: 10000, stock: 6, descripcion: 'Algodón 100% corte recto', imagen: 'img/remeras/remera-negra.jpg'},
+            {id: crypto.randomUUID(), nombre: 'Pantalón Cargo', categoria: 'pantalones', precio: 18000, stock: 8, descripcion: 'Tejido resistente con bolsillos', imagen: 'img/pantalones/cargo-verde.jpg'},
+            {id: crypto.randomUUID(), nombre: 'Campera Urbana', categoria: 'camperas', precio: 25000, stock: 5, descripcion: 'Corte oversize, liviana', imagen: 'img/camperas/campera-negra.jpg'},
+            {id: crypto.randomUUID(), nombre: 'Gorra AREA 1', categoria: 'accesorios', precio: 8000, stock: 12, descripcion: 'Bordado frontal', imagen: 'img/accesorios/gorra-negra.jpg'}
+          ];
+          LS.save(demo);
+        }
+      }
+    };
+
+    // Estado
+    let catalogo = [];
+    let carrito = [];
+    let currentCat = 'promos';
+
+    // Render catálogo con filtro
+    const catalogoEl = document.getElementById('catalogo');
+    function renderCatalogo(filtroCat = 'promos') {
+      catalogoEl.innerHTML = '';
+      const filtrados = catalogo.filter(p => filtroCat ? p.categoria === filtroCat : true);
+
+      if (filtrados.length === 0) {
+        catalogoEl.innerHTML = `<div class="empty">No hay productos en esta categoría</div>`;
+        return;
+      }
+
+      filtrados.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'producto';
+        card.innerHTML = `
+          <img src="${p.imagen || 'https://via.placeholder.com/600x400?text=AREA+1'}" alt="${p.nombre}">
+          <div class="contenido">
+            <h3>${p.nombre}</h3>
+            <div class="precio">ARS ${p.precio.toLocaleString('es-AR')}</div>
+            <div class="descripcion">${p.descripcion || ''}</div>
+            <div class="stock">${p.stock > 0 ? 'Stock: ' + p.stock : '<span class="sin-stock">Sin stock</span>'}</div>
+          </div>
+          <div class="acciones">
+            <button class="btn btn-primary" ${p.stock <= 0 ? 'disabled' : ''} data-id="${p.id}">Agregar</button>
+          </div>
+        `;
+        catalogoEl.appendChild(card);
+      });
+
+      // Agregar al carrito
+      document.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          const prod = catalogo.find(p => p.id === id);
+          if (!prod || prod.stock <= 0) return;
+          carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio });
+          renderCarrito();
+        });
+      });
+    }
+
+    // Render carrito
+    const carritoEl = document.getElementById('listaCarrito');
+    const totalEl = document.getElementById('totalMonto');
+    function renderCarrito() {
+      carritoEl.innerHTML = '';
+      let total = 0;
+      carrito.forEach((item, idx) => {
+        total += item.precio;
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${item.nombre}</span>
+          <span>ARS ${item.precio.toLocaleString('es-AR')}</span>
+          <button class="btn btn-ghost" data-remove="${idx}">✕</button>
+        `;
+        carritoEl.appendChild(li);
+      });
+      totalEl.textContent = `ARS ${total.toLocaleString('es-AR')}`;
+
+      // Eliminar del carrito
+      document.querySelectorAll('button[data-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-remove'), 10);
+          carrito.splice(idx, 1);
+          renderCarrito();
+        });
+      });
+    }
+
+    // Toggle carrito
+    const carritoPanel = document.getElementById('carrito');
+    document.getElementById('toggleCarrito').addEventListener('click', () => {
+      carritoPanel.style.display = carritoPanel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Vaciar carrito
+    document.getElementById('vaciarBtn').addEventListener('click', () => {
+      carrito = [];
+      renderCarrito();
+    });
+
+    // Checkout: valida, descuenta stock, arma mensaje y abre WhatsApp
+    document.getElementById('checkoutBtn').addEventListener('click', () => {
+      if (carrito.length === 0) return alert('Tu carrito está vacío.');
+
+      const nombre = document.getElementById('nombre').value.trim();
+      const dni = document.getElementById('dni').value.trim();
+      const localidad = document.getElementById('localidad').value.trim();
+      const direccion = document.getElementById('direccion').value.trim();
+      const contacto = document.getElementById('contacto').value.trim();
+      const aclaraciones = document.getElementById('aclaraciones').value.trim();
+
+      if (!nombre || !dni || !localidad || !direccion || !contacto) {
+        alert('Por favor completa todos los datos personales.');
+        return;
+      }
+
+      // Agrupar cantidades por producto
+      const map = new Map();
+      let total = 0;
+      carrito.forEach(item => {
+        const key = item.id;
+        const prev = map.get(key) || { nombre: item.nombre, cantidad: 0, precioUnit: item.precio };
+        prev.cantidad += 1;
+        map.set(key, prev);
+        total += item.precio;
+      });
+
+      // Verificar y descontar stock
+      let sinStock = [];
+      const actualizado = catalogo.map(p => {
+        const pedido = map.get(p.id);
+        if (!pedido) return p;
+        if (p.stock < pedido.cantidad) {
+          sinStock.push(`${p.nombre} (pedido: ${pedido.cantidad}, stock: ${p.stock})`);
+          return p;
+        }
+        return { ...p, stock: p.stock - pedido.cantidad };
+      });
+
+      if (sinStock.length > 0) {
+        alert('No hay stock suficiente para:\n- ' + sinStock.join('\n- '));
+        return;
+      }
+
+      // Guardar catálogo actualizado y limpiar carrito
+      catalogo = actualizado;
+      LS.save(catalogo);
+      carrito = [];
+      renderCatalogo(currentCat);
+      renderCarrito();
+
+      // Armar mensaje WhatsApp
+      let mensaje = `Pedido AREA 1%0A%0A`;
+      mensaje += `Nombre y apellido: ${encodeURIComponent(nombre)}%0A`;
+      mensaje += `DNI: ${encodeURIComponent(dni)}%0A`;
+      mensaje += `Localidad: ${encodeURIComponent(localidad)}%0A`;
+      mensaje += `Dirección: ${encodeURIComponent(direccion)}%0A`;
+      mensaje += `Contacto: ${encodeURIComponent(contacto)}%0A%0A`;
+      mensaje += `Listado de pedido:%0A`;
+      map.forEach(v => {
+        const subtotal = v.cantidad * v.precioUnit;
+        mensaje += `• ${encodeURIComponent(v.nombre)} x${v.cantidad} - ARS ${subtotal.toLocaleString('es-AR')}%0A`;
+      });
+      mensaje += `%0ATotal: ARS ${total.toLocaleString('es-AR')}%0A%0A`;
+      mensaje += `ACLARACIONES:%0A${encodeURIComponent(aclaraciones)}%0A`;
+
+      const url = `https://wa.me/${whatsAppNumber}?text=${mensaje}`;
+      window.open(url, '_blank');
+    });
+
+    // Navegación por categorías
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = btn.getAttribute('data-cat');
+        renderCatalogo(currentCat);
+      });
+    });
+
+    // Init: cargar catálogo y renderizar
+    LS.ensureDemo();
+    catalogo = LS.load();
+    renderCatalogo(currentCat);
+    renderCarrito();
+  </script>
+</body>
+</html>
+
